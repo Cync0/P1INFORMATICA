@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Kanban de Gestão Universal - Equipe A</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* INTERFACE PREMIUM DARK */
+        :root {
+            --bg-dark-main: #0b0714;     
+            --bg-dark-card: #161124;     
+            --win7-bar: linear-gradient(180deg, #2e1a47 0%, #1c0f2b 100%); 
+            --green-neon: #22c55e;       
+            --purple-light: #a78bfa;     
+            --text-white: #f8fafc;
+            --text-gray: #94a3b8;
+            --border-purple: #3b2263;    
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-dark-main);
+            color: var(--text-white);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* PAINEL DE CONTROLE LATERAL */
+        nav {
+            width: 290px;
+            background-color: #05030a;
+            border-right: 1px solid var(--border-purple);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .menu-list { display: flex; flex-direction: column; gap: 8px; }
+        .menu-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .menu-item:hover { background: #120b21; color: var(--text-white); }
+        .menu-item.active { 
+            background: linear-gradient(180deg, #1c0f2b 0%, #2e1a47 100%);
+            color: var(--green-neon); 
+            border-color: var(--green-neon);
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
+        }
+
+        /* ÁREA PRINCIPAL COM DEGRADÊ */
+        main { 
+            flex-grow: 1; 
+            padding: 40px; 
+            position: relative; 
+            overflow-y: auto; 
+            background-image: radial-gradient(circle at top right, #1e0b36, transparent 60%); 
+        }
+
+        /* CONFIGURAÇÃO PADRÃO DAS TELAS */
+        .screen { display: none; height: 100%; grid-template-columns: 1fr 1fr; gap: 40px; animation: fadeIn 0.3s ease; }
+        .screen.active { display: grid; }
+
+        /* CENTRALIZAÇÃO DO KANBAN (TELA 5) */
+        .screen.kanban-layout {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+        }
+        .screen.kanban-layout .content-text {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .screen.kanban-layout .interactive-area {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* TEXTOS E INSTITUCIONAL */
+        .school-tag {
+            color: var(--purple-light);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .content-text h1 { font-family: 'Poppins'; font-size: 2.5rem; color: var(--text-white); margin-bottom: 15px; font-weight: 700; line-height: 1.2; }
+        .content-text h1 span { color: var(--green-neon); }
+        .content-text p { font-size: 1.05rem; line-height: 1.6; color: var(--text-gray); margin-bottom: 20px; text-align: justify; }
+        
+        .feature-list { list-style: none; margin-bottom: 25px; }
+        .feature-list li { margin-bottom: 15px; font-size: 0.95rem; display: flex; align-items: start; gap: 12px; line-height: 1.4; color: #cbd5e1; }
+        .feature-list i { color: var(--green-neon); font-size: 1.1rem; margin-top: 3px; }
+
+        /* SUB-LISTAS INTERNAS EM TEXTO (TELA 4) */
+        .info-sub-box {
+            background: #0c0814;
+            border: 1px solid var(--border-purple);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info-sub-box h3 {
+            font-size: 1rem;
+            font-family: 'Poppins';
+            color: var(--purple-light);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-sub-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+        .info-sub-list li {
+            margin-bottom: 8px;
+            padding-left: 12px;
+            border-left: 2px solid var(--green-neon);
+        }
+
+        /* JANELAS ESTILO WINDOWS 7 PREMIUM */
+        .window-panel {
+            background: var(--bg-dark-card);
+            border-radius: 10px;
+            border: 1px solid var(--border-purple);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 100%;
+        }
+
+        .window-title-bar {
+            background: var(--win7-bar);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-purple);
+            color: var(--text-white);
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .window-title-bar i { color: #6d4b9e; font-size: 0.9rem; }
+
+        .window-content {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .btn-win7-dark {
+            background: linear-gradient(180deg, #2a1642 0%, #140b21 100%);
+            border: 1px solid var(--border-purple);
+            color: var(--text-white);
+            padding: 12px 22px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-win7-dark:hover { border-color: var(--green-neon); background: #22c55e10; }
+
+        /* INTEGRANTES */
+        .member-card { background: #0c0814; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; border: 1px solid var(--border-purple); text-align: center; color: #cbd5e1; font-size: 0.9rem; }
+
+        /* TIMELINE TOYOTA */
+        .timeline-box { width: 100%; padding: 12px 15px; border-radius: 8px; border-left: 5px solid #3b2263; background: #0c0814; margin-bottom: 10px; transition: 0.4s; opacity: 0.2; transform: scale(0.98); }
+        .timeline-box.active { opacity: 1; border-left-color: var(--green-neon); background: #22c55e05; transform: scale(1); }
+        .timeline-box h4 { font-size: 0.95rem; margin-bottom: 3px; color: var(--text-white); }
+        .timeline-box p { font-size: 0.8rem; color: var(--text-gray); margin-bottom: 0; text-align: left; line-height: 1.4; }
+
+        /* MÓDULO VISIBILIDADE */
+        .vis-box { width: 100%; display: none; flex-direction: column; gap: 10px; }
+        .vis-box.active { display: flex; }
+        .vis-alert-card { background: #1c0a15; border: 1px solid #ef444430; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 12px; font-size: 0.8rem; text-align: left; }
+        .vis-alert-card i { color: #ef4444; font-size: 1.2rem; }
+        .vis-success-card { background: #091a10; border: 1px solid #22c55e30; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 12px; font-size: 0.8rem; text-align: left; }
+        .vis-success-card i { color: var(--green-neon); font-size: 1.2rem; }
+
+        /* TRIAGEM EM LISTA */
+        .filter-item { width: 100%; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; transition: 0.3s; }
+        .filter-item.waste { background: #ef444408; border-color: #ef444430; }
+        .filter-item.value { background: #22c55e08; border-color: #22c55e30; }
+        .filter-item.eliminated { border-color: #ef4444; background: #ef444415; opacity: 0.4; }
+        .filter-item.approved { border-color: var(--green-neon); background: #22c55e15; opacity: 0.4; }
+        .filter-item span { font-size: 0.85rem; color: #e2e8f0; }
+        .action-btn { background: var(--green-neon); color: #000; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
+        .action-btn.btn-red { background: #ef4444; color: #fff; }
+
+        /* QUADRO KANBAN CENTRALIZADO */
+        .kanban-board { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            width: 100%; 
+            height: 380px; 
+        }
+        .kanban-col { background: #0c0814; border-radius: 10px; padding: 15px; border: 1px solid var(--border-purple); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .kanban-col h5 { font-size: 0.85rem; color: var(--purple-light); letter-spacing: 1px; text-align: center; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid var(--border-purple); padding-bottom: 10px; font-family: 'Poppins'; }
+        
+        .task-card { 
+            background: var(--bg-dark-card); 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-size: 0.95rem; 
+            font-weight: 600;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: #f8fafc; 
+            border: 1px solid var(--border-purple); 
+            border-left: 5px solid var(--green-neon); 
+            animation: cardFadeIn 0.3s ease;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .task-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1; }
+        .task-card .action-btn { padding: 6px 12px; flex-shrink: 0; font-size: 0.8rem; }
+
+        /* DASHBOARD - METRICAS TELA 6 */
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-bottom: 20px; }
+        .kpi-card { background: #0c0814; border: 1px solid var(--border-purple); padding: 15px; border-radius: 8px; text-align: center; }
+        .kpi-card h6 { font-size: 0.75rem; color: var(--text-gray); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .kpi-card .kpi-val { font-size: 1.6rem; font-weight: 700; color: var(--green-neon); font-family: 'Poppins'; }
+        
+        .metric-wrap { margin-bottom: 15px; width: 100%; }
+        .metric-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 5px; }
+        .metric-bar-bg { background: #0c0814; height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid var(--border-purple); width: 100%; }
+        .metric-bar-fill { background: linear-gradient(90deg, var(--border-purple) 0%, var(--green-neon) 100%); width: 0%; height: 100%; transition: width 1s ease-out; }
+
+        /* TABELA COMPARATIVA */
+        .performance-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #0c0814; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-purple); font-size: 0.8rem; }
+        .performance-table th, .performance-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #1c132e; }
+        .performance-table th { background: #1c132e; color: var(--purple-light); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; }
+        .performance-table td strong { color: var(--text-white); }
+
+        .explain-box { background: #110924; border: 1px solid #2e1a47; padding: 12px; border-radius: 6px; font-size: 0.8rem; line-height: 1.5; color: #cbd5e1; margin-top: 15px; }
+        .explain-box strong { color: var(--green-neon); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="menu-list">
+            <div class="menu-item active" onclick="changeScreen(0, this)"><i class="fa-solid fa-folder-open" style="color: #eab308;"></i> 1. Projeto Inicial</div>
+            <div class="menu-item" onclick="changeScreen(1, this)"><i class="fa-solid fa-clock-rotate-left" style="color: #3b82f6;"></i> 2. Origem Toyota</div>
+            <div class="menu-item" onclick="changeScreen(2, this)"><i class="fa-solid fa-desktop" style="color: #94a3b8;"></i> 3. Visibilidade Geral</div>
+            <div class="menu-item" onclick="changeScreen(3, this)"><i class="fa-solid fa-filter" style="color: #a855f7;"></i> 4. Filtro Lean</div>
+            <div class="menu-item" onclick="changeScreen(4, this)"><i class="fa-solid fa-chalkboard" style="color: #10b981;"></i> 5. Quadro Kanban</div>
+            <div class="menu-item" onclick="changeScreen(5, this)"><i class="fa-solid fa-chart-pie" style="color: #ef4444;"></i> 6. Desempenho</div>
+        </div>
+        <div style="font-size: 0.8rem; color: #5c7291; text-align: center;">Gestão Aplicada • 2026</div>
+    </nav>
+
+    <main>
+
+        <section class="screen active" id="sc0">
+            <div class="content-text">
+                <div class="school-tag">EETEPA Vilhena Alves</div>
+                <h1>Organização e <span>Eficiência para Tudo</span></h1>
+                <p>Nesta aplicação, vamos demonstrar como a união entre a metodologia Kanban e a filosofia Lean transforma fluxos de trabalho caóticos em processos estáveis, rápidos e previsíveis — seja gerenciando equipes, estudos ou operações comerciais.</p>
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-circle-nodes"></i> <strong>Foco:</strong> Gestão de Processos e Organização Universal</li>
+                    <li><i class="fa-solid fa-microchip"></i> <strong>Disciplina:</strong> Gestão Aplicada</li>
+                </ul>
+            </div>
+            <div class="window-panel">
+                <div class="window-title-bar"><span><i class="fa-solid fa-user-group"></i> Equipe A: Diretório</span> <i class="fa-solid fa-xmark"></i></div>
+                <div class="window-content">
+                    <div class="member-card">FABIO</div>
+                    <div class="member-card">RAFAELLA</div>
+                    <div class="member-card">ADRIAN</div>
+                    <div class="member-card">ESTELITA</div>
+                    <div class="member-card">RAIMUNDO</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="screen" id="sc1">
+            <div class="content-text">
+                <h1>A Origem: <span>Sistema Puxado</span></h1>
+                <p>O Kanban nasceu no Japão nas fábricas da Toyota. Sem espaço para estocar materiais, eles criaram regras visuais para combater os 3 grandes inimigos da eficiência em qualquer área da vida:</p>
+                <ul class="feature-list" style="margin-bottom: 25px;">
+                    <li><i class="fa-solid fa-ban" style="color:#ef4444;"></i> <strong>Muda (Desperdício):</strong> Produzir ou fazer coisas sem ter demanda real.</li>
+                    <li><i class="fa-solid fa-gavel" style="color:#eab308;"></i> <strong>Mura (Irregularidade):</strong> Falta de ritmo (ora sobrecarregado, ora sem fazer nada).</li>
+                    <li><i class="fa-solid fa-weight-hanging" style="color:#a855f7;"></i> <strong>Muri (Sobrecarga):</strong> Forçar a mente ou a estrutura além do limite saudável.</li>
+                </ul>
+                <button class="btn-win7-dark" onclick="triggerTimeline()"><i class="fa-solid fa-right-long"></i> Avançar Fluxo Histórico</button>
+            </div>
+            <div class="interactive-area window-panel">
+                <div class="window-title-bar"><span><i class="fa-solid fa-industry"></i> Linha de Production Universal</span><i class="fa-solid fa-xmark"></i></div>
+                <div class="window-content" style="padding: 15px; justify-content: start;">
+                    <div class="timeline-box active" id="t1">
+                        <h4>1. O Gatilho de Demanda</h4>
+                        <p>Inspirado nos supermercados: as prateleiras só são reabastecidas quando o cliente retira o produto. O consumo real dita o início de qualquer esforço de trabalho.</p>
+                    </div>
+                    <div class="timeline-box" id="t2">
+                        <h4>2. O Sinal Visual (Cartão)</h4>
+                        <p>Em vez de relatórios complexos, usam-se sinais visuais. Quando o recurso acaba ou um cliente pede algo, o sinal ativa imediatamente o próximo passo da produção.</p>
+                    </div>
+                    <div class="timeline-box" id="t3">
+                        <h4>3. Fluxo Just-in-Time</h4>
+                        <p>Trabalhar no momento exato. O estoque e as tarefas acumuladas viram quase zero, eliminando custos de armazenamento e evitando esforços inúteis.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="screen" id="sc2">
+            <div class="content-text">
+                <h1>Trabalho <span>Tornado Visível</span></h1>
+                <p>O maior perigo em escritórios, comércios ou rotinas de estudo é que o trabalho é <strong>invisível</strong>. Diferente de uma fábrica de carros, ninguém vê pilhas de tarefas acumuladas no chão. O Kanban tira os gargalos da fumaça e joga na parede.</p>
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <button class="btn-win7-dark" onclick="toggleVis('caos')"><i class="fa-solid fa-dumpster-fire" style="color:#ef4444;"></i> Ver Processo Oculto (Caos)</button>
+                    <button class="btn-win7-dark" onclick="toggleVis('foco')"><i class="fa-solid fa-table-columns" style="color:var(--green-neon);"></i> Mapear Visualmente</button>
+                </div>
+            </div>
+            <div class="interactive-area window-panel">
+                <div class="window-title-bar"><span><i class="fa-solid fa-desktop"></i> Monitor de Transparência do Fluxo</span><i class="fa-solid fa-xmark"></i></div>
+                <div class="window-content" style="padding: 15px; justify-content: start;">
+                    
+                    <div class="vis-box active" id="viewCaos">
+                        <h4 style="color: #ef4444; font-size:0.9rem; margin-bottom: 5px; text-align: left; width: 100%"><i class="fa-solid fa-triangle-exclamation"></i> Cenário Desorganizado (Trabalho Oculto)</h4>
+                        <div class="vis-alert-card">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                            <div><strong>Pedidos pelo WhatsApp:</strong> Ordens e alterações chegam soltas a toda hora. O funcionário para o que está fazendo para atender sem planejar.</div>
+                        </div>
+                        <div class="vis-alert-card">
+                            <i class="fa-solid fa-bug"></i>
+                            <div><strong>Problemas Camuflados:</strong> Erros acumulados em anotações locais. O líder acha que o projeto está terminando, mas a esteira está travada nos bastidores.</div>
+                        </div>
+                        <div class="vis-alert-card">
+                            <i class="fa-solid fa-battery-empty"></i>
+                            <div><strong>Mentes Sobrecarregadas:</strong> O integrante está com 5 tarefas iniciadas de cabeça. Nenhuma anda e o estresse bloqueia a produtividade.</div>
+                        </div>
+                    </div>
+
+                    <div class="vis-box" id="viewFoco">
+                        <h4 style="color: var(--green-neon); font-size:0.9rem; margin-bottom: 5px; text-align: left; width: 100%"><i class="fa-solid fa-square-check"></i> Cenário Controlado (Gestão Visual)</h4>
+                        <div class="vis-success-card">
+                            <i class="fa-solid fa-eye"></i>
+                            <div><strong>Capacidade à Vista:</strong> Cada pedido vira um cartão visível. Se entrar algo novo, vai para a fila "A Fazer" e aguarda a vez de ser puxado por prioridade.</div>
+                        </div>
+                        <div class="vis-success-card">
+                            <i class="fa-solid fa-traffic-light"></i>
+                            <div><strong>Sinalização de Bloqueios:</strong> Cartões travados ganham destaque. A equipe se mobiliza para resolver o impedimento antes de puxar novos serviços.</div>
+                        </div>
+                        <div class="vis-success-card">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <div><strong>Transparência Real:</strong> Olhando o quadro na parede, qualquer cliente ou gerente sabe exatamente em qual etapa o trabalho se encontra.</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="screen" id="sc3">
+            <div class="content-text" style="overflow-y: auto; max-height: 100%; padding-right: 10px;">
+                <h1>Expurgando <span>Desperdícios</span></h1>
+                <p>A filosofia Lean foca em limpar o caminho. De um lado, identificamos e eliminamos tudo o que gasta tempo e dinheiro mas não agrega valor. Do outro, protegemos as ações legítimas para alimentar nossa esteira.</p>
+                
+                <div class="info-sub-box">
+                    <h3><i class="fa-solid fa-bullseye"></i> Objetivos Estratégicos</h3>
+                    <ul class="info-sub-list">
+                        <li><strong>Ganho de Tempo Total:</strong> Reduzir em até 60% o tempo perdido com gargalos, burocracias e discussões desnecessárias.</li>
+                        <li><strong>Blindagem do Foco:</strong> Proteger a mente da equipe contra interrupções constantes para estabilizar a velocidade de entrega.</li>
+                    </ul>
+                </div>
+
+                <div class="info-sub-box">
+                    <h3><i class="fa-solid fa-star"></i> Benefícios de um Fluxo Limpo</h3>
+                    <ul class="info-sub-list">
+                        <li><strong>Melhoria Contínua (Kaizen):</strong> Pequenos ajustes diários na filtragem que geram grandes impactos de eficiência a longo prazo.</li>
+                        <li><strong>Qualidade Absoluta:</strong> Com a esteira limpa de distrações, a taxa de erros e retrabalho despenca para perto de zero.</li>
+                        <li><strong>Foco no Cliente Final:</strong> Dedicação máxima às ações reais pelas quais o usuário ou contratante está esperando.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="interactive-area window-panel">
+                <div class="window-title-bar"><span><i class="fa-solid fa-broom"></i> Triagem Estratégica do Processo</span><i class="fa-solid fa-xmark"></i></div>
+                <div class="window-content" style="padding: 15px; justify-content: start; overflow-y: auto; max-height: 380px; width:100%;">
+                    
+                    <div class="filter-item waste" id="w1">
+                        <span>⚠️ Reuniões ou discussões longas de 3 horas</span>
+                        <button class="action-btn btn-red" onclick="evaluateItem('w1', 'eliminate', 'Discussões Longas')">Eliminar</button>
+                    </div>
+                    <div class="filter-item waste" id="w2">
+                        <span>⚠️ Estoque excessivo / Tarefas extras não solicitadas</span>
+                        <button class="action-btn btn-red" onclick="evaluateItem('w2', 'eliminate', 'Excesso/Refugo')">Eliminar</button>
+                    </div>
+                    <div class="filter-item waste" id="w3">
+                        <span>⚠️ Distrações e interrupções da equipe a cada 5 minutos</span>
+                        <button class="action-btn btn-red" onclick="evaluateItem('w3', 'eliminate', 'Interrupções')">Eliminar</button>
+                    </div>
+
+                    <div class="filter-item value" id="v1">
+                        <span>✅ Corrigir imediatamente erros operacionais críticos</span>
+                        <button class="action-btn" onclick="evaluateItem('v1', 'approve', 'Corrigir Falhas')">Mantido</button>
+                    </div>
+                    <div class="filter-item value" id="v2">
+                        <span>✅ Padronizar os processos e testar o fluxo de entrega</span>
+                        <button class="action-btn" onclick="evaluateItem('v2', 'approve', 'Padronizar Processos')">Mantido</button>
+                    </div>
+                    <div class="filter-item value" id="v3">
+                        <span>✅ Organizar a mesa de trabalho e treinar novos membros</span>
+                        <button class="action-btn" onclick="evaluateItem('v3', 'approve', 'Organizar Estrutura')">Mantido</button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="screen kanban-layout" id="sc4">
+            <div class="content-text">
+                <h1>O Quadro de <span>Fluxo Contínuo</span></h1>
+                <p>Para garantir a leitura clara de todas as frentes de trabalho, o quadro está centralizado. Estabelecemos um limite máximo de <strong>2 tarefas na coluna "Fazendo"</strong>. Tente passar desse limite puxando os cards.</p>
+            </div>
+            <div class="interactive-area window-panel">
+                <div class="window-title-bar"><span><i class="fa-solid fa-table-columns"></i> Kanban Central Aplicado (Centralizado)</span><i class="fa-solid fa-xmark"></i></div>
+                <div class="window-content" style="padding: 15px;">
+                    <div class="kanban-board">
+                        <div class="kanban-col" id="todoCol">
+                            <h5>A Fazer</h5>
+                            <div class="task-card" id="k1"><span title="Organizar Arquivos">Organizar Arquivos</span> <button class="action-btn" onclick="processK('k1')">Puxar</button></div>
+                            <div class="task-card" id="k2"><span title="Revisar Finanças">Revisar Finanças</span> <button class="action-btn" onclick="processK('k2')">Puxar</button></div>
+                            <div class="task-card" id="k3"><span title="Entregar Pedidos">Entregar Pedidos</span> <button class="action-btn" onclick="processK('k3')">Puxar</button></div>
+                        </div>
+                        <div class="kanban-col" id="doingCol">
+                            <h5>Fazendo <span id="wipTag" style="background:#1c132e; padding:2px 6px; border-radius:4px; border:1px solid var(--border-purple);">0/2</span></h5>
+                        </div>
+                        <div class="kanban-col" id="doneCol">
+                            <h5>Pronto</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="screen" id="sc5">
+            <div class="content-text">
+                <h1>Métricas de <span>Performance Real</span></h1>
+                <p>Gerenciar com inteligência não é usar achismos, é usar engenharia de dados. Monitoramos o tempo médio de entrega e a vazão de tarefas da Equipe A para provar cientificamente a evolução matemática obtida com as regras Lean IT.</p>
+                <button class="btn-win7-dark" onclick="computeBars()"><i class="fa-solid fa-chart-line"></i> Rodar Relatório de Fluxo</button>
+                
+                <div class="explain-box">
+                    <strong>📈 Lei de Little aplicada:</strong> O tempo de entrega (Lead Time) é o resultado direto do volume de trabalho em andamento dividido pela taxa de saída. Se você limita as tarefas no "Fazendo" (WIP), as entregas saem até 3 vezes mais rápido!
+                </div>
+            </div>
+            <div class="interactive-area window-panel">
+                <div class="window-title-bar"><span><i class="fa-solid fa-chart-pie"></i> Painel Estatístico Expandido - Equipe A</span><i class="fa-solid fa-xmark"></i></div>
+                <div class="window-content" style="padding: 15px; justify-content: start; overflow-y: auto;">
+                    
+                    <div class="dash-grid">
+                        <div class="kpi-card">
+                            <h6>Tempo Médio de Entrega (Lead Time)</h6>
+                            <div class="kpi-val" id="valLT">-- dias</div>
+                        </div>
+                        <div class="kpi-card">
+                            <h6>Vazão de Entregas (Throughput)</h6>
+                            <div class="kpi-val" id="valTP">-- tarefas/sem</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-wrap">
+                        <div class="metric-label"><span>Eficiência do Fluxo (Aproveitamento do Tempo Ativo)</span><span id="txtB1">0%</span></div>
+                        <div class="metric-bar-bg"><div class="metric-bar-fill" id="b1"></div></div>
+                    </div>
+                    <div class="metric-wrap">
+                        <div class="metric-label"><span>Eliminação de Desperdícios Operacionais</span><span id="txtB2">0%</span></div>
+                        <div class="metric-bar-bg"><div class="metric-bar-fill" id="b2"></div></div>
+                    </div>
+                    <div class="metric-wrap">
+                        <div class="metric-label"><span>Previsibilidade de Entrega do Time</span><span id="txtB3">0%</span></div>
+                        <div class="metric-bar-bg"><div class="metric-bar-fill" id="b3"></div></div>
+                    </div>
+
+                    <table class="performance-table">
+                        <thead>
+                            <tr>
+                                <th>Indicador Comparativo</th>
+                                <th>Antes do Kanban</th>
+                                <th>Depois (Lean IT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Trabalho em Andamento (WIP)</strong></td>
+                                <td>8 tarefas soltas</td>
+                                <td style="color: var(--green-neon);">Máx 2 por pessoa</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tempo de Resposta</strong></td>
+                                <td>11.4 dias médios</td>
+                                <td style="color: var(--green-neon);">3.2 dias úteis</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Previsibilidade de Prazos</strong></td>
+                                <td>35% (Erros constantes)</td>
+                                <td style="color: var(--green-neon);">97% de acerto</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        let counter = 0;
+        let currentTimelineStep = 1;
+
+        // NAVEGAÇÃO SINGLE PAGE
+        function changeScreen(idx, element) {
+            document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+            document.querySelectorAll('.menu-list .menu-item').forEach(menu => menu.classList.remove('active'));
+            document.getElementById('sc' + idx).classList.add('active');
+            element.classList.add('active');
+        }
+
+        // TELA 2: ORIGEM TOYOTA
+        function triggerTimeline() {
+            if (currentTimelineStep < 3) {
+                currentTimelineStep++;
+                document.getElementById('t' + currentTimelineStep).classList.add('active');
+            } else {
+                document.getElementById('t2').classList.remove('active');
+                document.getElementById('t3').classList.remove('active');
+                currentTimelineStep = 1;
+            }
+        }
+
+        // TELA 3: VISIBILIDADE
+        function toggleVis(mode) {
+            const caosBox = document.getElementById('viewCaos');
+            const focoBox = document.getElementById('viewFoco');
+            
+            if(mode === 'caos') {
+                caosBox.classList.add('active');
+                focoBox.classList.remove('active');
+            } else {
+                focoBox.classList.add('active');
+                caosBox.classList.remove('active');
+            }
+        }
+
+        // TELA 4: FILTRO LEAN
+        function evaluateItem(id, action, textTitle) {
+            const card = document.getElementById(id);
+            const btn = card.querySelector('button');
+            
+            if (action === 'eliminate') {
+                card.className = "filter-item eliminated";
+                btn.innerText = "✖ Eliminado";
+                btn.disabled = true;
+            } else if (action === 'approve') {
+                card.className = "filter-item approved";
+                btn.innerText = "✔ Enviado";
+                btn.disabled = true;
+
+                counter++;
+                const newId = 'dynamic_k_' + counter;
+                const newCard = document.createElement('div');
+                newCard.className = "task-card";
+                newCard.id = newId;
+                newCard.innerHTML = `<span title="${textTitle}">${textTitle}</span> <button class="action-btn" onclick="processK('${newId}')">Puxar</button>`;
+                
+                document.getElementById('todoCol').appendChild(newCard);
+            }
+        }
+
+        // TELA 5: MOVIMENTAÇÃO DO QUADRO KANBAN
+        function processK(id) {
+            const card = document.getElementById(id);
+            const doing = document.getElementById('doingCol');
+            const done = document.getElementById('doneCol');
+            const wipTag = document.getElementById('wipTag');
+            const btn = card.querySelector('button');
+
+            if (card.parentElement.id === 'todoCol') {
+                const count = doing.querySelectorAll('.task-card').length;
+                if(count < 2) {
+                    doing.appendChild(card);
+                    btn.innerText = "Concluir";
+                } else {
+                    alert("Aviso de Limite (WIP): O time ou processo atingiu a capacidade máxima de 2 tarefas simultâneas. Conclua uma atividade em andamento antes de iniciar outra para evitar perda de foco e gargalos.");
+                }
+            } else if (card.parentElement.id === 'doingCol') {
+                done.appendChild(card);
+                btn.style.display = 'none';
+            }
+            wipTag.innerText = doing.querySelectorAll('.task-card').length + "/2";
+        }
+
+        // TELA 6: RESULTADOS
+        function computeBars() {
+            document.getElementById('valLT').innerText = "3.2 dias";
+            document.getElementById('valTP').innerText = "14 tarefas";
+
+            document.getElementById('b1').style.width = '88%';
+            document.getElementById('txtB1').innerText = "88%";
+
+            document.getElementById('b2').style.width = '94%';
+            document.getElementById('txtB2').innerText = "94%";
+
+            document.getElementById('b3').style.width = '97%';
+            document.getElementById('txtB3').innerText = "97%";
+        }
+    </script>
+</body>
+</html> 
